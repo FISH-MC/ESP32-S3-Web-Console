@@ -4,7 +4,7 @@ import machine
 import time
 
 print("\n" + "="*50)
-print("ESP32-S3 双网站系统启动中...")
+print("ESP32-S3 网站系统启动中...")
 print("="*50)
 
 # 清理内存

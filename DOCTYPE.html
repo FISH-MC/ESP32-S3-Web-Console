@@ -1,498 +1,194 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{device_id} 控制台</title>
-    <style>
-        body {{ font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }}
-        .container {{ max-width: 800px; margin: 0 auto; }}
-        
-        .console-panel {{
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }}
-        
-        h1 {{ color: #333; text-align: center; margin-top: 0; }}
-        h2 {{ color: #444; margin-top: 0; }}
-        
-        .status-bar {{
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-        }}
-        
-        .status-item {{
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-        }}
-        
-        .tab-nav {{
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-        }}
-        
-        .tab-btn {{
-            padding: 10px 15px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            color: #666;
-            border-bottom: 3px solid transparent;
-        }}
-        
-        .tab-btn.active {{
-            color: #007bff;
-            border-bottom-color: #007bff;
-        }}
-        
-        .tab-content {{
-            display: none;
-        }}
-        
-        .tab-content.active {{
-            display: block;
-        }}
-        
-        .btn {{
-            padding: 10px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }}
-        
-        .btn-success {{ background: #28a745; color: white; }}
-        .btn-danger {{ background: #dc3545; color: white; }}
-        .btn-primary {{ background: #007bff; color: white; }}
-        .btn-warning {{ background: #ffc107; color: black; }}
-        
-        .form-group {{ margin: 15px 0; }}
-        label {{ display: block; margin-bottom: 5px; font-weight: bold; }}
-        input, select, textarea {{
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }}
-        
-        .log {{
-            background: #333;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-family: monospace;
-            height: 150px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }}
-        
-        .network-list {{
-            max-height: 200px;
-            overflow-y: auto;
-            margin: 10px 0;
-        }}
-        
-        .network-item {{
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-            font-size: 12px;
-        }}
-        
-        .button-group {{
-            margin: 15px 0;
-            text-align: center;
-        }}
-        
-        .info-box {{
-            background: #e7f3ff;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            font-size: 14px;
-        }}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{device_id} 控制台</title>
+<style>
+body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5;}
+.container { max-width: 800px; margin: 0 auto; margin-top: 40px;}
+.console-panel { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 9px rgba(0,0,0,.08);}
+h1 { color: #333; text-align: center; }
+.tab-nav { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px;}
+.tab-btn {padding:14px 26px;font-weight:bold;color:#666;cursor:pointer;background:none;border:none;font-size:16px;border-bottom:2px solid transparent;}
+.tab-btn.active {color:#007bff;border-bottom-color:#007bff;}
+.tab-content {display:none;}
+.tab-content.active {display:block;}
+.button-group {margin:12px 0; text-align:center;}
+.btn {padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; background:#007bff;}
+.btn-danger {background:#dc3545;} .btn-warning {background:#ffc107;color:#333;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="console-panel">
-            <h1>{device_id} 控制台</h1>
-            
-            <div class="status-bar">
-                <span>设备ID: {device_id}</span>
-                <span>IP: 192.168.4.1</span>
-            </div>
-            
-            <div class="tab-nav">
-                <button class="tab-btn active" onclick="showTab('status')">状态</button>
-                <button class="tab-btn" onclick="showTab('wifi')">WiFi</button>
-                <button class="tab-btn" onclick="showTab('system')">系统</button>
-                <button class="tab-btn" onclick="showTab('gpio')">GPIO</button>
-            </div>
-            
-            <!-- 状态标签页 -->
-            <div id="tab-status" class="tab-content active">
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
-                    <div class="status-item">
-                        <span>设备状态:</span>
-                        <span style="color: green;">● 在线</span>
-                    </div>
-                    <div class="status-item">
-                        <span>运行时间:</span>
-                        <span id="uptime">0秒</span>
-                    </div>
-                    <div class="status-item">
-                        <span>CPU频率:</span>
-                        <span id="cpu_freq">{global_state["cpu_freq"]} MHz</span>
-                    </div>
-                    <div class="status-item">
-                        <span>可用内存:</span>
-                        <span id="free_mem">-- KB</span>
-                    </div>
-                    <div class="status-item">
-                        <span>WiFi连接:</span>
-                        <span id="wifi_status" style="color: red;">● 未连接</span>
-                    </div>
-                </div>
-                
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="updateStatus()">🔄 刷新状态</button>
-                    <button class="btn btn-warning" onclick="restartDevice()">🔄 重启设备</button>
-                </div>
-            </div>
-            
-            <!-- WiFi标签页 -->
-            <div id="tab-wifi" class="tab-content">
-                <div class="info-box">
-                    <strong>说明:</strong> 连接到现有WiFi网络后，AP热点将自动关闭。
-                </div>
-                
-                <h3>WiFi连接设置</h3>
-                <div class="form-group">
-                    <label>WiFi名称 (SSID):</label>
-                    <input type="text" id="wifi_ssid" placeholder="输入WiFi名称">
-                </div>
-                <div class="form-group">
-                    <label>WiFi密码:</label>
-                    <input type="password" id="wifi_password" placeholder="输入WiFi密码">
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-success" onclick="connectWifi()">连接WiFi</button>
-                    <button class="btn btn-danger" onclick="disconnectWifi()">断开WiFi</button>
-                    <button class="btn btn-primary" onclick="scanWifi()">扫描WiFi</button>
-                </div>
-                
-                <div class="network-list" id="wifi_networks">
-                    <!-- WiFi网络列表将显示在这里 -->
-                </div>
-                
-                <div class="log" id="wifi_log">WiFi日志将显示在这里...</div>
-            </div>
-            
-            <!-- 系统标签页 -->
-            <div id="tab-system" class="tab-content">
-                <h3>系统设置</h3>
-                <div class="form-group">
-                    <label>CPU频率:</label>
-                    <select id="cpu_freq_select" onchange="setCpuFreq(this.value)">
-                        <option value="80">80 MHz (省电)</option>
-                        <option value="160">160 MHz (平衡)</option>
-                        <option value="240" selected>240 MHz (性能)</option>
-                    </select>
-                </div>
-                
-                <div style="margin: 20px 0;">
-                    <h4>设备信息</h4>
-                    <div class="status-item">
-                        <span>设备ID:</span>
-                        <span>{device_id}</span>
-                    </div>
-                </div>
-                
-                <div class="button-group">
-                    <button class="btn btn-warning" onclick="factoryReset()">恢复出厂设置</button>
-                </div>
-            </div>
-            
-            <!-- GPIO标签页 -->
-            <div id="tab-gpio" class="tab-content">
-                <h3>GPIO控制</h3>
-                <div class="info-box">
-                    <strong>注意:</strong> 此功能仅用于测试，小心操作避免短路。
-                </div>
-                
-                <div class="form-group">
-                    <label>选择GPIO引脚:</label>
-                    <select id="gpio_pin">
-                        <option value="2">GPIO 2</option>
-                        <option value="4">GPIO 4</option>
-                        <option value="12">GPIO 12</option>
-                        <option value="13">GPIO 13</option>
-                        <option value="15">GPIO 15</option>
-                        <option value="18">GPIO 18</option>
-                        <option value="19">GPIO 19</option>
-                        <option value="21">GPIO 21</option>
-                        <option value="22">GPIO 22</option>
-                        <option value="23">GPIO 23</option>
-                        <option value="25">GPIO 25</option>
-                        <option value="26">GPIO 26</option>
-                        <option value="27">GPIO 27</option>
-                        <option value="32">GPIO 32</option>
-                        <option value="33">GPIO 33</option>
-                        <option value="48" selected>GPIO 48 (板载LED)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>引脚模式:</label>
-                    <select id="gpio_mode">
-                        <option value="output">输出模式</option>
-                        <option value="input">输入模式</option>
-                    </select>
-                </div>
-                
-                <div class="button-group">
-                    <button class="btn btn-success" onclick="gpioSet(1)">输出高电平</button>
-                    <button class="btn btn-danger" onclick="gpioSet(0)">输出低电平</button>
-                    <button class="btn btn-primary" onclick="gpioRead()">读取引脚</button>
-                </div>
-                
-                <div class="log" id="gpio_log">GPIO操作日志将显示在这里...</div>
-            </div>
+<div class="container"><div class="console-panel">
+    <h1>{device_id} 控制台</h1>
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('status')">状态</button>
+        <button class="tab-btn" onclick="showTab('wifi')">WiFi</button>
+        <button class="tab-btn" onclick="showTab('gpio')">GPIO</button>
+        <button class="tab-btn" onclick="showTab('frp')">FRP</button>
+        <button class="tab-btn" onclick="showTab('system')">系统</button>
+    </div>
+    <!-- 状态 -->
+    <div id="tab-status" class="tab-content active">
+        <div>CPU: <b id="cpu_freq"></b> &nbsp; 内存: <b id="free_mem"></b> &nbsp; WiFi: <b id="wifi_status"></b><br>
+            FRP: <b id="frp_status"></b> &nbsp; 运行: <b id="uptime"></b></div>
+        <div style="margin:12px 0">
+            <button class="btn" onclick="updateStatus()">刷新状态</button>
+            <button class="btn btn-warning" onclick="restartDevice()">重启设备</button>
         </div>
     </div>
-    
-    <script>
-        let uptime = 0;
-        
-        // 更新运行时间
-        setInterval(() => {{
-            uptime++;
-            const hours = Math.floor(uptime / 3600);
-            const minutes = Math.floor((uptime % 3600) / 60);
-            const seconds = uptime % 60;
-            document.getElementById('uptime').textContent = 
-                `${{hours}}时${{minutes}}分${{seconds}}秒`;
-            
-            // 每30秒自动更新状态
-            if (uptime % 30 === 0) {{
-                updateStatus();
-            }}
-        }}, 1000);
-        
-        // 标签页切换
-        function showTab(tabId) {{
-            // 隐藏所有标签页
-            document.querySelectorAll('.tab-content').forEach(tab => {{
-                tab.classList.remove('active');
-            }});
-            // 移除所有按钮激活状态
-            document.querySelectorAll('.tab-btn').forEach(btn => {{
-                btn.classList.remove('active');
-            }});
-            // 显示选中标签页
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.target.classList.add('active');
-        }}
-        
-        // 更新状态
-        function updateStatus() {{
-            fetch('/status')
-                .then(r => r.text())
-                .then(data => {{
-                    try {{
-                        const status = JSON.parse(data);
-                        document.getElementById('cpu_freq').textContent = status.cpu_freq + ' MHz';
-                        document.getElementById('free_mem').textContent = status.free_mem + ' KB';
-                        
-                        if (status.wifi_connected) {{
-                            document.getElementById('wifi_status').innerHTML = '● 已连接: ' + status.wifi_ssid;
-                            document.getElementById('wifi_status').style.color = 'green';
-                        }} else {{
-                            document.getElementById('wifi_status').textContent = '● 未连接';
-                            document.getElementById('wifi_status').style.color = 'red';
-                        }}
-                    }} catch(e) {{
-                        console.error('解析状态失败:', e);
-                    }}
-                }})
-                .catch(err => {{
-                    console.error('获取状态失败:', err);
-                }});
-        }}
-        
-        // 连接WiFi
-        function connectWifi() {{
-            const ssid = document.getElementById('wifi_ssid').value;
-            const password = document.getElementById('wifi_password').value;
-            
-            if (!ssid) {{
-                alert('请输入WiFi名称');
-                return;
-            }}
-            
-            const log = document.getElementById('wifi_log');
-            log.textContent = '正在连接WiFi...';
-            
-            fetch('/wifi/connect?ssid=' + encodeURIComponent(ssid) + '&password=' + encodeURIComponent(password))
-            .then(r => r.text())
-            .then(data => {{
-                log.textContent = data;
-                updateStatus();
-            }})
-            .catch(err => {{
-                log.textContent = '连接失败: ' + err;
-            }});
-        }}
-        
-        // 断开WiFi
-        function disconnectWifi() {{
-            const log = document.getElementById('wifi_log');
-            log.textContent = '正在断开WiFi...';
-            
-            fetch('/wifi/disconnect')
-                .then(r => r.text())
-                .then(data => {{
-                    log.textContent = data;
-                    updateStatus();
-                }})
-                .catch(err => {{
-                    log.textContent = '断开失败: ' + err;
-                }});
-        }}
-        
-        // 扫描WiFi
-        function scanWifi() {{
-            const log = document.getElementById('wifi_log');
-            const networkList = document.getElementById('wifi_networks');
-            log.textContent = '正在扫描WiFi...';
-            networkList.innerHTML = '';
-            
-            fetch('/wifi/scan')
-                .then(r => r.text())
-                .then(data => {{
-                    try {{
-                        const networks = JSON.parse(data);
-                        log.textContent = `找到 ${{networks.length}} 个网络`;
-                        
-                        networks.forEach(net => {{
-                            const networkItem = document.createElement('div');
-                            networkItem.className = 'network-item';
-                            networkItem.innerHTML = `
-                                <strong>${{net.ssid}}</strong><br>
-                                信号: ${{net.rssi}}dBm | 信道: ${{net.channel}}
-                                <button class="btn btn-small btn-primary" 
-                                        onclick="selectWifi('${{net.ssid}}')"
-                                        style="float: right; margin-top: -5px;">
-                                    选择
-                                </button>
-                            `;
-                            networkList.appendChild(networkItem);
-                        }});
-                    }} catch(e) {{
-                        log.textContent = data;
-                    }}
-                }})
-                .catch(err => {{
-                    log.textContent = '扫描失败: ' + err;
-                }});
-        }}
-        
-        // 选择WiFi
-        function selectWifi(ssid) {{
-            document.getElementById('wifi_ssid').value = ssid;
-            document.getElementById('wifi_password').focus();
-        }}
-        
-        // 设置CPU频率
-        function setCpuFreq(freq) {{
-            fetch('/system/cpu_freq?value=' + freq)
-                .then(r => r.text())
-                .then(data => {{
-                    if (data.includes('成功')) {{
-                        document.getElementById('cpu_freq').textContent = freq + ' MHz';
-                        alert('CPU频率已设置为 ' + freq + ' MHz');
-                        updateStatus();
-                    }}
-                }});
-        }}
-        
-        // 重启设备
-        function restartDevice() {{
-            if (confirm('确定要重启设备吗？')) {{
-                fetch('/system/restart')
-                    .then(() => {{
-                        alert('设备正在重启...');
-                    }})
-                    .catch(() => {{
-                        alert('重启请求已发送');
-                    }});
-            }}
-        }}
-        
-        // 恢复出厂设置
-        function factoryReset() {{
-            if (confirm('确定要恢复出厂设置吗？所有配置将被清除！')) {{
-                fetch('/system/factory_reset')
-                    .then(() => {{
-                        alert('设备正在恢复出厂设置...');
-                    }})
-                    .catch(() => {{
-                        alert('恢复出厂设置请求已发送');
-                    }});
-            }}
-        }}
-        
-        // GPIO控制
-        function gpioSet(value) {{
-            const pin = document.getElementById('gpio_pin').value;
-            const log = document.getElementById('gpio_log');
-            log.textContent = '正在设置GPIO...';
-            
-            fetch('/gpio/set?pin=' + pin + '&value=' + value)
-                .then(r => r.text())
-                .then(data => {{
-                    log.textContent = data;
-                }})
-                .catch(err => {{
-                    log.textContent = '设置失败: ' + err;
-                }});
-        }}
-        
-        function gpioRead() {{
-            const pin = document.getElementById('gpio_pin').value;
-            const log = document.getElementById('gpio_log');
-            log.textContent = '正在读取GPIO...';
-            
-            fetch('/gpio/read?pin=' + pin)
-                .then(r => r.text())
-                .then(data => {{
-                    log.textContent = 'GPIO ' + pin + ' 值: ' + data;
-                }})
-                .catch(err => {{
-                    log.textContent = '读取失败: ' + err;
-                }});
-        }}
-        
-        // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {{
-            updateStatus();
-            
-            // 每30秒更新状态
-            setInterval(updateStatus, 30000);
-        }});
-    </script>
+    <!-- WiFi -->
+    <div id="tab-wifi" class="tab-content">
+        <div>SSID: <input id="wifi_ssid" placeholder="WiFi名称"> 密码: <input id="wifi_password" type="password" placeholder="WiFi密码">
+            <button class="btn" onclick="connectWifi()">连接</button>
+            <button class="btn btn-danger" onclick="disconnectWifi()">断开</button>
+            <button class="btn" onclick="scanWifi()">扫描WiFi</button></div>
+        <div id="wifi_networks"></div>
+    </div>
+    <!-- GPIO -->
+    <div id="tab-gpio" class="tab-content">
+        <div>引脚:
+            <select id="gpio_pin">
+                <option>14</option><option>13</option><option>12</option><option>11</option><option>10</option>
+                <option>9</option><option>46</option><option>3</option><option>8</option><option>18</option>
+                <option>17</option><option>16</option><option>15</option><option>7</option><option>6</option>
+                <option>5</option><option>4</option><option>20</option><option>21</option><option>47</option>
+                <option>48</option><option>45</option><option>0</option><option>35</option><option>36</option>
+                <option>37</option><option>38</option><option>39</option><option>40</option><option>41</option>
+                <option>42</option><option>2</option><option>1</option>
+            </select>
+        </div>
+        <div class="button-group">
+            <button class="btn" onclick="gpioSet(1)">高电平</button>
+            <button class="btn btn-danger" onclick="gpioSet(0)">低电平</button>
+            <button class="btn" onclick="gpioRead()">读取</button>
+        </div>
+        <div>
+            <button class="btn btn-warning" onclick="openWaveDialog('square')">方波波形</button>
+            <button class="btn btn-warning" onclick="openWaveDialog('sin')">正弦波波形</button>
+        </div>
+        <div id="gpio_log"></div>
+    </div>
+    <!-- FRP -->
+    <div id="tab-frp" class="tab-content">
+        <p>FRP状态: <b id="frp_status2"></b></p>
+        <button class="btn" onclick="startFRP()">启动隧道</button>
+        <button class="btn btn-danger" onclick="stopFRP()">停止隧道</button>
+        <div style="margin-top:8px;">
+            <label>FRP服务器:</label>
+            <input id="frp_server" placeholder="如 1.2.3.4">
+            <label>端口:</label>
+            <input id="frp_port" placeholder="端口" type="number">
+            <label>Token:</label>
+            <input id="frp_token" placeholder="Token">
+            <button class="btn" onclick="saveFrpConfig()">保存服务器配置</button>
+        </div>
+    </div>
+    <!-- 系统 -->
+    <div id="tab-system" class="tab-content">
+        <div>CPU频率:
+        <select id="cpu_freq_select" onchange="setCpuFreq(this.value)">
+            <option value="80">80MHz</option><option value="160">160MHz</option><option value="240" selected>240MHz</option>
+        </select></div>
+        <div>
+            <button class="btn btn-warning" onclick="factoryReset()">恢复出厂</button>
+        </div>
+    </div>
+</div></div>
+<script>
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+function updateStatus() {
+    fetch('/status').then(r=>r.json()).then(status=>{
+        document.getElementById('cpu_freq').textContent = status.cpu_freq+'MHz';
+        document.getElementById('free_mem').textContent = status.free_mem+'KB';
+        document.getElementById('wifi_status').textContent = status.wifi_connected ? '已连接:' + status.wifi_ssid : '未连接';
+        document.getElementById('frp_status').textContent = status.frp_running ? '运行中':'未运行';
+        document.getElementById('frp_status2').textContent = status.frp_running ? '运行中':'未运行';
+        document.getElementById('uptime').textContent = status.uptime+'秒';
+    });
+}
+function connectWifi() {
+    fetch('/wifi/connect?ssid='+encodeURIComponent(document.getElementById('wifi_ssid').value)+'&password='+encodeURIComponent(document.getElementById('wifi_password').value))
+        .then(r=>r.text()).then(data=>{alert(data); updateStatus();});
+}
+function disconnectWifi() {
+    fetch('/wifi/disconnect').then(r=>r.text()).then(data=>{alert(data); updateStatus();});
+}
+function scanWifi() {
+    fetch('/wifi/scan').then(r=>r.json()).then(data=>{
+        let netList = document.getElementById('wifi_networks');
+        netList.innerHTML="";
+        data.forEach(net=>{
+            let o = document.createElement('div');
+            o.textContent = `${net.ssid} | 信号${net.rssi}dBm | 信道${net.channel}`;
+            netList.appendChild(o);
+        });
+    });
+}
+function gpioSet(val) {
+    const pin = document.getElementById('gpio_pin').value;
+    fetch(`/gpio/set?pin=${pin}&value=${val}`).then(r=>r.text()).then(d=>{
+        document.getElementById('gpio_log').textContent=d;
+    });
+}
+function gpioRead() {
+    const pin = document.getElementById('gpio_pin').value;
+    fetch(`/gpio/read?pin=${pin}`).then(r=>r.text()).then(d=>{
+        document.getElementById('gpio_log').textContent='GPIO值:'+d;
+    });
+}
+function setCpuFreq(val) {
+    fetch('/system/cpu_freq?value='+val).then(r=>r.text()).then(d=>alert(d));
+}
+function restartDevice() {
+    if(confirm('确定要重启?')) fetch('/restart').then(r=>r.text()).then(d=>alert(d));
+}
+function factoryReset() {
+    if(confirm('是否恢复出厂设置?')) fetch('/factory_reset').then(r=>r.text()).then(d=>alert(d));
+}
+function startFRP() {
+    fetch('/frp/start').then(r=>r.text()).then(d=>{
+        document.getElementById('frp_status').textContent = '运行中';
+        document.getElementById('frp_status2').textContent = '运行中';
+        alert(d);
+    });
+}
+function stopFRP() {
+    fetch('/frp/stop').then(r=>r.text()).then(d=>{
+        document.getElementById('frp_status').textContent = '未运行';
+        document.getElementById('frp_status2').textContent = '未运行';
+        alert(d);
+    });
+}
+function saveFrpConfig() {
+    const s = encodeURIComponent(document.getElementById('frp_server').value);
+    const p = encodeURIComponent(document.getElementById('frp_port').value);
+    const t = encodeURIComponent(document.getElementById('frp_token').value);
+    fetch(`/frp/config?server=${s}&port=${p}&token=${t}`).then(r=>r.json()).then(cfg=>{
+        alert(`FRP服务器设置已保存:\n地址:${cfg.server}\n端口:${cfg.port}\nToken:${cfg.token}`);
+    });
+}
+function getFrpConfig() {
+    fetch('/frp/config').then(r=>r.json()).then(cfg=>{
+        document.getElementById('frp_server').value = cfg.server || "";
+        document.getElementById('frp_port').value = cfg.port || "";
+        document.getElementById('frp_token').value = cfg.token || "";
+    });
+}
+function openWaveDialog(type) {
+    let freq = prompt("设置输出频率 Hz（如50-2000）：", "500");
+    if(!freq) return;
+    let pin = document.getElementById('gpio_pin').value;
+    fetch(`/gpio/wave?pin=${pin}&type=${type}&freq=${freq}`).then(r=>r.text()).then(d=>alert(d));
+}
+document.addEventListener('DOMContentLoaded',function(){updateStatus();getFrpConfig();});
+setInterval(updateStatus, 30000);
+</script>
 </body>
 </html>
